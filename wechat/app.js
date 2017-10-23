@@ -12,6 +12,6 @@ var app = new Koa();
 
 app.use(wechat(config.wechat,weixin.reply))   //reply 相当于中间件的handler，将控制权交给此。
 
-app.listen(8080);
+app.listen(1234);
 
-console.log('listning:8080');
+console.log('listning:1234');

@@ -6,12 +6,12 @@ var fs = require('fs');
 
 var prefix = 'https://api.weixin.qq.com/cgi-bin/';
 var api = {
-	accessToken: prefix + 'token?grant_type=client_credential',
+	access_token: prefix + 'token?grant_type=client_credential',
 	upload: prefix + 'media/upload?'
 }
 
 function Wechat(opts) {
-	this.appID = opts.appID;
+	this.appId = opts.appId;
 	this.appSecret = opts.appSecret;
 	this.getAccessToken = opts.getAccessToken;
 	this.saveAccessToken = opts.saveAccessToken;
@@ -19,7 +19,7 @@ function Wechat(opts) {
 	this.fetchAccessToken();
 }
 
-Wechat.prototype.fetchAccessToken = function (ata) {
+Wechat.prototype.fetchAccessToken = function () {
 	var that = this;
 	if (this.access_token && this.expires_in) {
 		if (this.isValidAccessToken(this)) {
@@ -70,13 +70,13 @@ Wechat.prototype.isValidAccessToken = function (data) {
 
 
 Wechat.prototype.updateAccessToken = function () {
-	var appID = this.appID;
+	var appId = this.appId;
 	var appSecret = this.appSecret;
-	var url = api.accessToken + "appid=" + appID + "&secret=" + appSecret;
+	var url = api.access_token + "&appid=" + appId + "&secret=" + appSecret;
 
 	return new Promise(function (resolve, reject) {
 		request({ url: url, json: true }).then(function (response) {
-			var data = response;
+			var data = response.body;
 			var now = (new Date().getTime());
 			var expires_in = now + (data.expires_in - 20) * 1000;
 
@@ -92,16 +92,17 @@ Wechat.prototype.uploadMaterial = function (type, filepath) {
 		media: fs.createReadStream(filepath)
 	}
 
-	let appID = this.appID;
+	let appId = this.appId;
 	let appSecret = this.appSecret;
 	return new Promise(function (resolve, reject) {
 		that
 			.fetchAccessToken()
 			.then(function (data) {
 				let url = api.upload + '&access_token=' + data.access_token + "&type=" + type;
-				console.log('url', url)
+				// console.log('url', url)
 				request({ method: 'POST', url: url, formData: form, json: true }).then(function (response) {
 					let _data = response.body;
+					console.log(response.body)
 					if (_data) {
 						resolve(_data);
 					} else {

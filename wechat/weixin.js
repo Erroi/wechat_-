@@ -1,4 +1,5 @@
 "use strict";
+var path = require('path');
 var config = require('./config');
 var Wechat = require('./wechat/wechat');
 var wechatApi = new Wechat(config.wechat);
@@ -49,7 +50,7 @@ exports.reply = function* (next){
                 url:'https://baidu.com'
             }]
         }else if(content === '5'){
-            let data = yield wechatApi.uploadMaterial('image',__dirname + '/2.jpg');
+            let data = yield wechatApi.uploadMaterial('image',path.join(__dirname,'./3.jpg'));
             reply = {
                 type:'image',
                 mediaId: data.media_id
