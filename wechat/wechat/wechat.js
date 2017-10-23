@@ -42,7 +42,6 @@ Wechat.prototype.fetchAccessToken = function () {
 			}
 		})
 		.then(function (data) {
-			console.log('access',data.access_token)
 			that.access_token = data.access_token;
 			that.expires_in = data.expires_in;
 
@@ -99,10 +98,9 @@ Wechat.prototype.uploadMaterial = function (type, filepath) {
 			.fetchAccessToken()
 			.then(function (data) {
 				let url = api.upload + '&access_token=' + data.access_token + "&type=" + type;
-				// console.log('url', url)
 				request({ method: 'POST', url: url, formData: form, json: true }).then(function (response) {
 					let _data = response.body;
-					console.log(response.body)
+
 					if (_data) {
 						resolve(_data);
 					} else {
