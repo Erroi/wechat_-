@@ -1,0 +1,19 @@
+{
+    "name": "node-elm",
+    "version": "1.0.0",
+    "description": "",
+    "main": "app.js",
+    "author": "cangdu <1264889788@qq.com>",
+    "license": "GPL",
+    "private": true,
+    "devDependencies": {
+        "bluebird": "^3.5.1",
+        "fs": "0.0.1-security",
+        "koa": "^2.3.0",
+        "path": "^0.12.7",
+        "raw-body": "^2.3.2",
+        "request": "^2.83.0",
+        "sha1": "^1.1.1",
+        "xml2js": "^0.4.19"
+    }
+}
