@@ -7,7 +7,14 @@ var fs = require('fs');
 var prefix = 'https://api.weixin.qq.com/cgi-bin/';
 var api = {
 	access_token: prefix + 'token?grant_type=client_credential',
-	upload: prefix + 'media/upload?'
+	temporary:{                                 //临时素材
+		upload: prefix + 'media/upload?',
+	},
+	permanent:{
+		upload: prefix + 'material/add_material?',
+		uploadNews: prefix + 'material/add_news?',
+		uploadPic: prefix + 'media/uploadimg?'
+	}
 }
 
 function Wechat(opts) {
