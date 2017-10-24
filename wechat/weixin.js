@@ -55,6 +55,25 @@ exports.reply = function* (next){
                 type:'image',
                 mediaId: data.media_id
             }
+        }else if(content === '6'){
+            let data = yield wechatApi.uploadMaterial('video',path.join(__dirname,'./6.mp4'));
+            reply = {
+                type:'video',
+                title:'视屏测试',
+                description:'我们玩一下',
+                mediaId:data.media_id
+            }
+        }else if(content === '7'){
+            let data = yield wechatApi.uploadMaterial('image',path.join(__dirname,'./3.jpg'));
+           
+            reply = {
+                type:'music',
+                title:'music 来喽',
+                description:'lets play music',
+                musicUrl:'http://mpge.5nd.com/2015/2015-9-12/66325/1.mp3',
+                hqMusicUrl:'http://mpge.5nd.com/2015/2015-9-12/66325/1.mp3',
+                thumbMediaId:data.media_id,
+            }
         }
         this.body = reply;
     }
