@@ -3,6 +3,7 @@ var Promise = require('bluebird');
 var request = Promise.promisify(require('request'));
 var util = require('./util');
 var fs = require('fs');
+var _ = require('lodash');
 
 var prefix = 'https://api.weixin.qq.com/cgi-bin/';
 var api = {
@@ -94,9 +95,7 @@ Wechat.prototype.updateAccessToken = function () {
 
 Wechat.prototype.uploadMaterial = function (type, material,permanent) {
 	let that = this;
-	// var form = {
-	// 	media: fs.createReadStream(filepath)
-	// }
+	
 	let uploadUrl = api.temporary.upload;
 	if(permanent){
 		uploadUrl = api.permanent.upload;
@@ -122,8 +121,23 @@ Wechat.prototype.uploadMaterial = function (type, material,permanent) {
 		that
 			.fetchAccessToken()
 			.then(function (data) {
-				let url = uploadUrl + '&access_token=' + data.access_token + "&type=" + type;
-				request({ method: 'POST', url: url, formData: form, json: true }).then(function (response) {
+				let url = uploadUrl + '&access_token=' + data.access_token ;
+				if(!permanent){
+					url += '&type=' + type;
+				}else{
+					form.access_token = data.access_token;
+				}
+				let options = {
+					method:'POST',
+					url:url,
+					json:true,
+				}
+				if(type === 'news'){
+					options.body = form;
+				}else{
+					options.formData = form;
+				}
+				request(options).then(function (response) {
 					let _data = response.body;
 
 					if (_data) {
