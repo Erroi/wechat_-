@@ -7,13 +7,13 @@ var fs = require('fs');
 var prefix = 'https://api.weixin.qq.com/cgi-bin/';
 var api = {
 	access_token: prefix + 'token?grant_type=client_credential',
-	temporary:{                                 //临时素材
+	temporary:{                                 //临时素材   access_token 和 type
 		upload: prefix + 'media/upload?',
 	},
-	permanent:{
-		upload: prefix + 'material/add_material?',
-		uploadNews: prefix + 'material/add_news?',
-		uploadPic: prefix + 'media/uploadimg?'
+	permanent:{                                 //永久素材
+		upload: prefix + 'material/add_material?',     //其他类型  access_token 和 type
+		uploadNews: prefix + 'material/add_news?',     //图文		access_token
+		uploadNewsPic: prefix + 'media/uploadimg?'     //消息内图片   access_token
 	}
 }
 
@@ -92,10 +92,28 @@ Wechat.prototype.updateAccessToken = function () {
 	})
 }
 
-Wechat.prototype.uploadMaterial = function (type, filepath) {
+Wechat.prototype.uploadMaterial = function (type, material,permanent) {
 	let that = this;
-	var form = {
-		media: fs.createReadStream(filepath)
+	// var form = {
+	// 	media: fs.createReadStream(filepath)
+	// }
+	let uploadUrl = api.temporary.upload;
+	if(permanent){
+		uploadUrl = api.permanent.upload;
+		_.extends(form,permanent);  //让form继承permanent的
+	}
+
+	//如果是图片、视屏 则是路径
+	if(type === 'pic'){
+		uploadUrl = api.permanent.uploadNewsPic;
+	}
+
+	//如果是 图文 的时候，material是数组，
+	if(type === 'news'){
+		uploadUrl = api.permanent.uploadNews;
+		form = material;
+	}else{
+		form.media = fs.createReadStream(material)
 	}
 
 	let appId = this.appId;
@@ -104,7 +122,7 @@ Wechat.prototype.uploadMaterial = function (type, filepath) {
 		that
 			.fetchAccessToken()
 			.then(function (data) {
-				let url = api.temporary.upload + '&access_token=' + data.access_token + "&type=" + type;
+				let url = uploadUrl + '&access_token=' + data.access_token + "&type=" + type;
 				request({ method: 'POST', url: url, formData: form, json: true }).then(function (response) {
 					let _data = response.body;
 
