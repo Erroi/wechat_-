@@ -59,7 +59,7 @@ module.exports = function(opts,handler){
 			// }
 			this.weixin = message;  //1把消息挂载到this
 			//2解析业务层
-			yield handler.call(this,next);   //控制器handler，通过call改变上下文this，把next做参数传给handler。
+			yield handler.call(this,next);   //控制器handler，通过call改变上下文this，把next做参数传给handler。   ===》得到要返回的内容 this.body = reply Object对象
 			//3通过中间件2 已经处理完解析和回复。这时将解析后的回复返回给微信 
 			wechat.reply.call(this);
 

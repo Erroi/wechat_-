@@ -3,18 +3,21 @@ var Promise = require('bluebird');
 var request = Promise.promisify(require('request'));
 var util = require('./util');
 var fs = require('fs');
-var _ = require('lodash');
 
 var prefix = 'https://api.weixin.qq.com/cgi-bin/';
 var api = {
 	access_token: prefix + 'token?grant_type=client_credential',
 	temporary:{                                 //临时素材   access_token 和 type
-		upload: prefix + 'media/upload?',
+		upload: prefix + 'media/upload?',     //上传
+		fetch:prefix + 'media/get?',            //下载
 	},
 	permanent:{                                 //永久素材
 		upload: prefix + 'material/add_material?',     //其他类型  access_token 和 type
+		fetch: prefix + 'material/get_material?',
 		uploadNews: prefix + 'material/add_news?',     //图文		access_token
-		uploadNewsPic: prefix + 'media/uploadimg?'     //消息内图片   access_token
+		uploadNewsPic: prefix + 'media/uploadimg?',     //消息内图片   access_token
+		del:prefix + '/material/del_material?',  //删除 
+		update: prefix + "material/update_news?"  //修改
 	}
 }
 
@@ -95,11 +98,15 @@ Wechat.prototype.updateAccessToken = function () {
 
 Wechat.prototype.uploadMaterial = function (type, material,permanent) {
 	let that = this;
+	let form = {};
 	
 	let uploadUrl = api.temporary.upload;
 	if(permanent){
 		uploadUrl = api.permanent.upload;
-		_.extends(form,permanent);  //让form继承permanent的
+		// console.log(form);   //{}
+		// _.extend(form,permanent);  //让form继承permanent的属性
+		Object.assign(form,permanent);   //对象扩展 与上面功能一致
+		console.log('3',form);  //{XXX:XXX}
 	}
 
 	//如果是图片、视屏 则是路径
@@ -144,6 +151,96 @@ Wechat.prototype.uploadMaterial = function (type, material,permanent) {
 						resolve(_data);
 					} else {
 						throw new Error('Upload material fails')
+					}
+				}).catch(function (err) {
+					reject(err);
+				})
+			})
+
+	})
+}
+
+//下载素材
+Wechat.prototype.fetchMaterial = function (mediaId, type,permanent) {
+	let that = this;
+	let form = {};
+	
+	let fetchUrl = api.temporary.fetch;
+	if(permanent){
+		fetchUrl = api.permanent.fetch;
+	}
+
+	let appId = this.appId;
+	let appSecret = this.appSecret;
+	return new Promise(function (resolve, reject) {
+		that
+			.fetchAccessToken()
+			.then(function (data) {
+				let url = fetchUrl + '&access_token=' + data.access_token + '&media_id=' + mediaId ;
+				if(!permanent && type == "vedio"){
+					url = url.replace('https','http');
+				}
+
+				resolve(url);
+			})
+
+	})
+}
+
+
+//删除素材
+Wechat.prototype.deletMaterial = function (mediaId) {
+	let that = this;
+	let form = {
+		media_id:mediaId
+	};
+	
+	let appId = this.appId;
+	let appSecret = this.appSecret;
+	return new Promise(function (resolve, reject) {
+		that
+			.fetchAccessToken()
+			.then(function (data) {
+				let url = api.permanent.del + '&access_token=' + data.access_token + '&media_id=' + mediaId ;
+				request({method:'POST',url:url,body:form,json:true}).then(function (response) {
+					let _data = response.body;
+
+					if (_data) {
+						resolve(_data);
+					} else {
+						throw new Error('Delet material fails')
+					}
+				}).catch(function (err) {
+					reject(err);
+				})
+			})
+
+	})
+}
+
+//修改永久素材
+Wechat.prototype.updateMaterial = function(mediaId,news){
+	let that = this;
+	let form = {
+		media_id:mediaId
+	};
+
+	Object.assign(form,news);
+	
+	let appId = this.appId;
+	let appSecret = this.appSecret;
+	return new Promise(function (resolve, reject) {
+		that
+			.fetchAccessToken()
+			.then(function (data) {
+				let url = api.permanent.update + '&access_token=' + data.access_token + '&media_id=' + mediaId ;
+				request({method:'POST',url:url,body:form,json:true}).then(function (response) {
+					let _data = response.body;
+
+					if (_data) {
+						resolve(_data);
+					} else {
+						throw new Error('Update material fails')
 					}
 				}).catch(function (err) {
 					reject(err);

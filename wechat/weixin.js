@@ -4,7 +4,7 @@ var config = require('./config');
 var Wechat = require('./wechat/wechat');
 var wechatApi = new Wechat(config.wechat);
 
-//回复 支付  错误通知
+//回复 支付  错误通知  处理的是this.request的数据对象
 exports.reply = function* (next){
     var message = this.weixin;
 
