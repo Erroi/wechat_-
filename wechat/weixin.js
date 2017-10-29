@@ -91,6 +91,89 @@ exports.reply = function* (next){
                 description:'我们玩一下',
                 mediaId:data.media_id
             }
+        }else if(content === '10'){
+            var picData = yield wechatApi.uploadMaterial('image',path.join(__dirname,'./3.jpg'),{})
+
+            var media = {
+                articles:[{
+                    title:'tututu4',
+                    thumb_media_id: picData.media_id,
+                    author:'yangqian',
+                    digest:'nonono没有摘要',
+                    show_cover_pic:1,
+                    content:'没有内容',
+                    content_source_url:'https://github.com',
+                },{
+                    title:'tuttutut5',
+                    thumb_media_id:picData.media_id,
+                    author:'yangqian',
+                    digest:'5 没有摘要',
+                    show_cover_pic:2,
+                    content:'这是内容',
+                    content_source_url:'http://github.com'
+                }]
+            }
+
+            let data1 = yield wechatApi.uploadMaterial('news',media,{});
+            let data = yield wechatApi.fetchMaterial(data1.media_id,'news',{});
+            console.log(data);
+
+            var items = data.news_item;
+            var news = [];
+
+            items.forEach(function(item){
+                news.push({
+                    title:item.title,
+                    description:item.digest,
+                    picUrl:picData.url,
+                    url:item.url
+                })
+            })
+            reply = news;
+        }else if(content === '11'){
+            var counts = yield wechatApi.countMaterial();
+
+            console.log(counts)
+
+            var results = yield [
+                wechatApi.batchMaterial({
+                    type:'image',
+                    offset:0,
+                    count:10
+                }),
+                wechatApi.batchMaterial({
+                    type:'video',
+                    offset:0,
+                    count:10
+                }),
+                wechatApi.batchMaterial({
+                    type:'voice',
+                    offset:0,
+                    count:10
+                }),
+                wechatApi.batchMaterial({
+                    type:'news',
+                    offset:0,
+                    count:10
+                })
+            ]
+            console.log(results)
+            reply = JSON.stringify(results);
+        }else if(content === '12'){
+            var tag = yield wechatApi.createTag('tag5');
+            console.log(tag);
+
+            var tags = yield wechatApi.fetchTag()
+            console.log(tags);
+
+            var updateTag = yield wechatApi.updateTag(tag.tag.id,'tag14')
+            
+            console.log('update',updateTag);
+            
+            var delTag = yield wechatApi.deleteTag(tag.tag.id);
+            var tags = yield wechatApi.fetchTag()
+            console.log(tags);
+            reply = 'tag test done'
         }
         this.body = reply;
     }

@@ -16,8 +16,21 @@ var api = {
 		fetch: prefix + 'material/get_material?',
 		uploadNews: prefix + 'material/add_news?',     //图文		access_token
 		uploadNewsPic: prefix + 'media/uploadimg?',     //消息内图片   access_token
-		del:prefix + '/material/del_material?',  //删除 
-		update: prefix + "material/update_news?"  //修改
+		del:prefix + 'material/del_material?',  //删除 
+		update: prefix + "material/update_news?",  //修改
+		count: prefix + 'material/get_materialcount?',  //获取素材总数
+		batch: prefix + 'material/batchget_material?'   //获取素材列表
+	},
+	tags:{
+		create: prefix + 'tags/create?',
+		fetch: prefix + 'tags/get?',
+		check: prefix + 'tags/update?',
+		userGet: prefix + '/user/tag/get?',  //获取标签下粉丝列表
+		delet: prefix + 'tags/delet?',
+		batchTag: prefix + 'tags/members/batchtagging?',  //批量为用户打标签
+		unbatchTag: prefix + 'tags/members/batchuntagging?', //批量为用户取消标签
+		getidList: prefix + 'tags/getidlist?',  //获取用户身上的标签列表
+
 	}
 }
 
@@ -128,7 +141,7 @@ Wechat.prototype.uploadMaterial = function (type, material,permanent) {
 		that
 			.fetchAccessToken()
 			.then(function (data) {
-				let url = uploadUrl + '&access_token=' + data.access_token ;
+				let url = uploadUrl + 'access_token=' + data.access_token ;
 				if(!permanent){
 					url += '&type=' + type;
 				}else{
@@ -170,20 +183,39 @@ Wechat.prototype.fetchMaterial = function (mediaId, type,permanent) {
 		fetchUrl = api.permanent.fetch;
 	}
 
-	let appId = this.appId;
-	let appSecret = this.appSecret;
+	
 	return new Promise(function (resolve, reject) {
 		that
 			.fetchAccessToken()
 			.then(function (data) {
-				let url = fetchUrl + '&access_token=' + data.access_token + '&media_id=' + mediaId ;
-				if(!permanent && type == "vedio"){
-					url = url.replace('https','http');
+				let url = fetchUrl + 'access_token=' + data.access_token;
+				let form = {};
+				let options = {method: 'POST',url:url,json:true}
+				if(permanent){
+					form.media_id = mediaId;
+					form.access_token = data.access_token;
+					options.body = form;
+				}else{
+					if(type === 'video'){
+						url = url.replace('https://','http://')
+					}
+					url += '&media_id=' + mediaId;
 				}
-
-				resolve(url);
+				if(type === 'news' || type === 'video'){
+					request(options).then(function(response){
+						var _data = response.body;
+						if(_data){
+							resolve(_data);
+						}else{
+							throw new Error('fetch material failed')
+						}
+					}).catch(function(err){
+						reject(err)
+					})
+				}else{
+					resolve(url)
+				}
 			})
-
 	})
 }
 
@@ -201,7 +233,7 @@ Wechat.prototype.deletMaterial = function (mediaId) {
 		that
 			.fetchAccessToken()
 			.then(function (data) {
-				let url = api.permanent.del + '&access_token=' + data.access_token + '&media_id=' + mediaId ;
+				let url = api.permanent.del + 'access_token=' + data.access_token + '&media_id=' + mediaId ;
 				request({method:'POST',url:url,body:form,json:true}).then(function (response) {
 					let _data = response.body;
 
@@ -227,13 +259,11 @@ Wechat.prototype.updateMaterial = function(mediaId,news){
 
 	Object.assign(form,news);
 	
-	let appId = this.appId;
-	let appSecret = this.appSecret;
 	return new Promise(function (resolve, reject) {
 		that
 			.fetchAccessToken()
 			.then(function (data) {
-				let url = api.permanent.update + '&access_token=' + data.access_token + '&media_id=' + mediaId ;
+				let url = api.permanent.update + 'access_token=' + data.access_token + '&media_id=' + mediaId ;
 				request({method:'POST',url:url,body:form,json:true}).then(function (response) {
 					let _data = response.body;
 
@@ -241,6 +271,178 @@ Wechat.prototype.updateMaterial = function(mediaId,news){
 						resolve(_data);
 					} else {
 						throw new Error('Update material fails')
+					}
+				}).catch(function (err) {
+					reject(err);
+				})
+			})
+
+	})
+}
+
+//计数永久素材
+Wechat.prototype.countMaterial = function(){
+	let that = this;
+	
+	return new Promise(function (resolve, reject) {
+		that
+			.fetchAccessToken()
+			.then(function (data) {
+				let url = api.permanent.update + 'access_token=' + data.access_token;
+				request({method:'GET',url:url,json:true}).then(function (response) {
+					let _data = response.body;
+
+					if (_data) {
+						resolve(_data);
+					} else {
+						throw new Error('count material fails')
+					}
+				}).catch(function (err) {
+					reject(err);
+				})
+			})
+
+	})
+}
+
+//修改永久素材
+Wechat.prototype.batchMaterial = function(options){
+	let that = this;
+	
+	options.type = options.type || 'image';
+	options.offset = options.offset || 0;
+	options.count = options.count || 1;
+
+	
+	return new Promise(function (resolve, reject) {
+		that
+			.fetchAccessToken()
+			.then(function (data) {
+				let url = api.permanent.batch + 'access_token=' + data.access_token;
+				request({method:'POST',url:url,body:options,json:true}).then(function (response) {
+					let _data = response.body;
+
+					if (_data) {
+						resolve(_data);
+					} else {
+						throw new Error('Batch material fails')
+					}
+				}).catch(function (err) {
+					reject(err);
+				})
+			})
+
+	})
+}
+
+//创建标签
+Wechat.prototype.createTag = function(name){
+	let that = this;
+
+	return new Promise(function (resolve, reject) {
+		that
+			.fetchAccessToken()
+			.then(function (data) {
+				let url = api.tags.create + 'access_token=' + data.access_token;
+				let options = {
+					tag:{
+						name:name
+					}
+				};
+				request({method:'POST',url:url,body:options,json:true}).then(function (response) {
+					let _data = response.body;
+
+					if (_data) {
+						resolve(_data);
+					} else {
+						throw new Error('createTag fails')
+					}
+				}).catch(function (err) {
+					reject(err);
+				})
+			})
+
+	})
+}
+
+//获取标签
+Wechat.prototype.fetchTag = function(){
+	let that = this;
+
+	return new Promise(function (resolve, reject) {
+		that
+			.fetchAccessToken()
+			.then(function (data) {
+				let url = api.tags.fetch + 'access_token=' + data.access_token;
+				
+				request({method:'GET',url:url,json:true}).then(function (response) {
+					let _data = response.body;
+
+					if (_data) {
+						resolve(_data);
+					} else {
+						throw new Error('fetchTag fails')
+					}
+				}).catch(function (err) {
+					reject(err);
+				})
+			})
+
+	})
+}
+
+//编辑标签
+Wechat.prototype.updateTag = function(id,name){
+	let that = this;
+
+	return new Promise(function (resolve, reject) {
+		that
+			.fetchAccessToken()
+			.then(function (data) {
+				let url = api.tags.check + 'access_token=' + data.access_token;
+				let options = {
+					tag:{
+						id:id,
+						name:name
+					}
+				};
+				request({method:'POST',url:url,body:options,json:true}).then(function (response) {
+					let _data = response.body;
+
+					if (_data) {
+						resolve(_data);
+					} else {
+						throw new Error('updateTag fails')
+					}
+				}).catch(function (err) {
+					reject(err);
+				})
+			})
+
+	})
+}
+
+//删除标签
+Wechat.prototype.deleteTag = function(id){
+	let that = this;
+
+	return new Promise(function (resolve, reject) {
+		that
+			.fetchAccessToken()
+			.then(function (data) {
+				let url = api.tags.delet + 'access_token=' + data.access_token;
+				let options = {
+					tag:{
+						id:id
+					}
+				};
+				request({method:'POST',url:url,body:options,json:true}).then(function (response) {
+					let _data = response.body;
+
+					if (_data) {
+						resolve(_data);
+					} else {
+						throw new Error('deleteTag fails')
 					}
 				}).catch(function (err) {
 					reject(err);
