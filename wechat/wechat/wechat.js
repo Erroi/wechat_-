@@ -44,7 +44,12 @@ var api = {
 		delete: prefix + 'message/mass/delete?',  //删除群发消息
 		preview: prefix + 'message/mass/preview?',   //预览
 		check: prefix + 'message/mass/get?',    //查询群发状态
-
+	},
+	menu:{
+		create: prefix + 'menu/create?',
+		fetch: prefix + 'menu/get?',
+		delet: prefix + 'menu/delete?',
+		current: prefix + 'get_current_selfmenu_info?'   //返回配置菜单
 	}
 }
 
@@ -717,7 +722,107 @@ Wechat.prototype.checkMass = function(msgId) {
 		  })
 		})
 	})
-  }
+}
+
+//创建菜单
+Wechat.prototype.createMenu = function(menu){
+	var that = this;
+
+	return new Promise(function(resolve,reject){
+		that
+			.fetchAccessToken()
+			.then(function(data){
+				var url = api.menu.create + 'access_token=' + data.access_token;
+
+				request({method: 'POST',url:url,body:menu,json:true}).then(function(response){
+					var _data = response.body;
+
+					if(_data){
+						resolve(_data);
+					}else{
+						throw new Error('Create menu fails');
+					}
+				}).catch(function(err){
+					reject(err)
+				})
+			})
+	})
+}
+
+//获取菜单
+Wechat.prototype.fetchMenu = function(){
+	var that = this;
+
+	return new Promise(function(resolve,reject){
+		that
+			.fetchAccessToken()
+			.then(function(data){
+				var url = api.menu.fetch + 'access_token=' + data.access_token;
+
+				request({url:url,json:true}).then(function(response){
+					var _data = response.body;
+
+					if(_data){
+						resolve(_data);
+					}else{
+						throw new Error('Create menu fails');
+					}
+				}).catch(function(err){
+					reject(err)
+				})
+			})
+	})
+}
+
+//删除菜单
+Wechat.prototype.deleteMenu = function(){
+	var that = this;
+
+	return new Promise(function(resolve,reject){
+		that
+			.fetchAccessToken()
+			.then(function(data){
+				var url = api.menu.delete + 'access_token=' + data.access_token;
+
+				request({url:url,json:true}).then(function(response){
+					var _data = response.body;
+
+					if(_data){
+						resolve(_data);
+					}else{
+						throw new Error('Create menu fails');
+					}
+				}).catch(function(err){
+					reject(err)
+				})
+			})
+	})
+}
+
+//获取菜单配置
+Wechat.prototype.getCurrentMenu = function(){
+	var that = this;
+
+	return new Promise(function(resolve,reject){
+		that
+			.fetchAccessToken()
+			.then(function(data){
+				var url = api.menu.current + 'access_token=' + data.access_token;
+
+				request({url:url,json:true}).then(function(response){
+					var _data = response.body;
+
+					if(_data){
+						resolve(_data);
+					}else{
+						throw new Error('Create menu fails');
+					}
+				}).catch(function(err){
+					reject(err)
+				})
+			})
+	})
+}
 
 Wechat.prototype.reply = function () {
 	//此时的上下文为context
