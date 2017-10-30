@@ -174,6 +174,43 @@ exports.reply = function* (next){
             var tags = yield wechatApi.fetchTag()
             console.log(tags);
             reply = 'tag test done'
+        }else if(content === '13'){
+            var user = yield wechatApi.fetchUsers(message.FromUserName,'en');
+            console.log(user);
+
+            var openIds = [
+                {
+                    openid:message.FromUserName,
+                    lang:'en'
+                }
+            ];
+            var users = yield wechatApi.batchFetchUser(openIds);
+            console.log(users);
+            reply = user.headimgurl;
+        }else if(content === '14'){
+            var userList = yield wechatApi.getUserList();
+
+            console.log(userList);
+            reply = userList.total
+        }else if(content === '15'){
+            var mpnews = {
+                media_id:'2U8s3KbccFXE1RXKfm-Fw7l8vJrkDM1_qi9yq-XzBLg'
+            }
+            var msgDate = yield wechatApi.sendByGroup('image',mpnews,1)
+            console.log(msgDate)
+            reply = msgDate.errmsg;
+        }else if(content === '16'){
+            var text = {
+                'content':'hello my sweeter'
+            }
+            var msgDate = yield wechatApi.previewMass('text',text,'o0SwNws4jdUIFrlXtjkl4TBYcC8w');
+            console.log(msgDate);
+            reply = "preview yeah"
+        }else if(content === '17'){
+            var msgDate = yield wechatApi.checkMass('6482616164311118127');
+
+            console.log(msgDate);
+            reply = 'checkMass';
         }
         this.body = reply;
     }
