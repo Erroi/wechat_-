@@ -87,21 +87,38 @@ function sign(ticket,url){
     }
 }
 
-app.use(function *(next){
-    if(this.url.indexOf('/movie') > -1){
-        var wechatApi = new Wechat(config.wechat);
-        var data = yield wechatApi.fetchAccessToken();
-        var access_token = data.access_token;
-        var ticketData = yield wechatApi.fetchTicket(access_token);
-        var ticket = data.ticket;
-        var url = this.href;
-        var params = sign(ticket,url);
-console.log(params)
-        this.body = ejs.render(tpl,params);
+// app.use(function *(next){
+//     if(this.url.indexOf('/movie') > -1){
+//         var wechatApi = new Wechat(config.wechat);
+//         var data = yield wechatApi.fetchAccessToken();
+//         var access_token = data.access_token;
+//         var ticketData = yield wechatApi.fetchTicket(access_token);
+//         var ticket = data.ticket;
+//         var url = this.href;
+//         var params = sign(ticket,url);
+// console.log(params)
+//         this.body = ejs.render(tpl,params);
 
-        return next;
+//         return next;
+//     }
+// });
+
+app.use(async function(ctx,next){
+    if(ctx.request.url.indexOf('/movie') > -1){
+        var wechatApi = new Wechat(config.wechat);
+        var data = await wechatApi.fetchAccessToken();
+        var access_token = data.access_token;
+        var ticketData = await wechatApi.fetchTicket(access_token);
+        var ticket = data.ticket;
+        let url = ctx.request.href;
+        let params = sign(ticket,url);
+        console.log(params);
+        ctx.body = ejs.render(tpl,params);
+
+        // next();
     }
 })
+
 
 app.use(wechat(config.wechat,weixin.reply));   //reply 相当于中间件的handler，将控制权交给此。
 
